@@ -495,8 +495,26 @@ SendStream.prototype.pipe = function pipe (res) {
       return res
     }
 
-    // join / normalize from optional root dir
-    path = normalize(join(root, path))
+    // join / normalize from optional root dir -- valid for windows and other systems.
+  	/**
+  	 * the variables are used to encode and decode pathnames
+  	 */
+  	var labelNode = '/local/';
+  	var labelDevice = '/dev/';
+  	var p = path.indexOf(labelNode);
+  	// console.log('SEND-internal: ' + root + ' -- ' + path + ' ' + p);
+  	if ( p >= 0 && p <= 2 ) { // if it is local then we ignore root.
+  		path = path.slice(p + labelNode.length -1);
+  		p = path.indexOf(labelDevice);
+  		// console.log('SEND-internal-internat: ' + root + ' -- ' + path + ' ' + p);
+    		if (p !== -1)
+  			path = path.substr(1,1) + ':' + path.slice(p + labelDevice.length -1);
+  		// console.log('SEND-recoded: ' + path);
+  	} else {
+		  path = normalize(join(root, path));
+	  	// console.log('SEND-notlocal: ' + path);
+  	}
+
     root = normalize(root + sep)
 
     // explode path parts
